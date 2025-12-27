@@ -1,9 +1,9 @@
 
 const mongoose = require('mongoose');
-const bcrypt = requir('bcrypt');
+const bcrypt = require('bcrypt');
 
 // Creating user schema
-const userSchema = new mongoose.schema({
+const userSchema = new mongoose.Schema({
     name: {
         type: String,
         required: [true, 'Name is required!'],
@@ -43,9 +43,9 @@ const userSchema = new mongoose.schema({
 // Hashing the password before saving to database
 userSchema.pre('save', async function () {
 
-    // If password field is not modified (usually in edit profile), then skip logic and move to next
+    // If password field is not modified (usually in edit profile), then skip logic
     if (!this.isModified("Password")) {
-        return next();
+        return;
     }
 
     // Otherwise hash the password before saving into database

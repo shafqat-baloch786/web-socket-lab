@@ -3,6 +3,7 @@ const app = express();
 const cors = require('cors');
 const helmet = require('helmet');
 const errorMiddleware = require('./middleware/errorMiddleware');
+const authRoute = require('./routes/authRoute');
 
 
 
@@ -15,6 +16,9 @@ app.use(helmet());
 // Body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Routes
+app.use('/api/auth', authRoute);
 
 
 
