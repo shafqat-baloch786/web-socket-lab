@@ -2,12 +2,9 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const helmet = require('helmet');
+const errorMiddleware = require('./middleware/errorMiddleware');
 
 
-
-
-
-// Using above modules
 
 // Cors for Cross Origin Sharing
 app.use(cors());
@@ -21,5 +18,8 @@ app.use(express.urlencoded({ extended: true }));
 
 
 
+
+// Global error middeleware 
+app.use(errorMiddleware);
 
 module.exports = app;
