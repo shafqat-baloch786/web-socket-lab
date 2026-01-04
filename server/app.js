@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const errorMiddleware = require('./middleware/errorMiddleware');
 const authRoute = require('./routes/authRoute');
+const mainRoute = require('./routes/mainRoute');
 
 
 
@@ -17,9 +18,11 @@ app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
+// Auth routes
 app.use('/api/auth', authRoute);
 
+// Main routes
+app.use('/api/main', mainRoute);
 
 
 
