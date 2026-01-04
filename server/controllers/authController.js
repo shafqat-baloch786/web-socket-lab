@@ -8,9 +8,9 @@ const generateToken = require('../utils/generateToken');
 const register = asyncWrapper(async (req, res, next) => {
     const { name, email, password } = req.body;
     const userExists = await User.findOne({ email });
-    
+
     // Check if user already exists
-    if(userExists) {
+    if (userExists) {
         return next(new ErrorHandler('User already exists!', 400));
     }
 
@@ -40,8 +40,39 @@ const register = asyncWrapper(async (req, res, next) => {
 });
 
 
+// Login user
+const login = asyncWrapper(async (req, res, next) => {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+
+    // Checking if user exists
+    if (!user) {
+        return next(new ErrorHandler("User not found", 404));
+    }
+
+    const isPasswordMatched = user.comparePassword(password);
+    if(!isPasswordMatched) {
+        return next(new ErrorHandler("Invalid email or password!", 404));
+    }
+
+    // Generating token to make sure user is logged in inside of browser
+    const token = generateToken(user._id);
+    return res.status(200).json({
+        token,
+        success: true,
+        message: "User logged in!",
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+        },
+    })
+});
+
+
 
 // Exporting controllers
 module.exports = {
     register,
+    login,
 }
