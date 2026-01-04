@@ -1,16 +1,13 @@
 const User = require('../models/User');
 const asyncWrapper = require('../utils/asyncWrapper');
-
+const ErrorHandler =  require('../utils/ErrorHandlerClass');
 
 // Get profile data
 const getProfile = asyncWrapper(async (req, res, next) => {
     const user = req.user;
 
     if (!user) {
-        return res.status(404).json({
-            success: false,
-            message: "User not found!"
-        })
+        return next(new ErrorHandler('User not found!', 404));
     }
 
     return res.status(200).json({
@@ -33,3 +30,4 @@ const getProfile = asyncWrapper(async (req, res, next) => {
 module.exports = {
     getProfile,
 }
+
