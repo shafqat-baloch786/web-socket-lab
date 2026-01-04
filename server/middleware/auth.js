@@ -20,14 +20,10 @@ const auth = async (req, res, next) => {
             token = token.split(' ')[1];
             const decode = jwt.verify(token, process.env.JWT_SECRET);
             const user = await User.findById(decode.id).select('_id name email avatar isOnline lastSeen createdAt');
-            return res.status(200).json({
-                success: true,
-                message: "User is authorized!",
-                user,
-            })
+            req.user = user;
         }
-
-
+        
+        next();
     } catch (error) {
         console.log("Error", error);
         return next(new ErrorHandler("Error", 400));
