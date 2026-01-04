@@ -27,7 +27,40 @@ const getProfile = asyncWrapper(async (req, res, next) => {
 });
 
 
+// Edit profile
+const editProfile = asyncWrapper(async (req, res, next) => {
+    const userId = req.user.id;
+    const { name, email, avatar } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+        userId,
+        {
+            $set: {
+            name,
+            email,
+            avatar,
+            }
+
+        },
+        {
+            new: true,
+            runValidators: true
+        }
+    ).select('_id name email avatar isOnline lastSeen createdAt');
+
+    if(!user) {
+        return next(new ErrorHandler("User does not exists!", 404));
+    }
+
+    return res.status(200).json({
+        success: true,
+        message: "User udpated successfully!",
+        user,
+    })
+});
+
 module.exports = {
     getProfile,
+    editProfile,
 }
 
