@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const errorMiddleware = require('./middleware/errorMiddleware');
 const authRoute = require('./routes/authRoute');
 const mainRoute = require('./routes/mainRoute');
+const messagesRoute = require('./routes/messageRoute');
 
 
 
@@ -23,6 +24,9 @@ app.use('/api/auth', authRoute);
 
 // Main routes
 app.use('/api/main', mainRoute);
+
+// Messages routes
+app.use('/api', messagesRoute);
 
 
 
