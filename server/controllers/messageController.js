@@ -1,6 +1,7 @@
 const asyncWrapper = require('../utils/asyncWrapper');
 const Messages = require('../models/Message');
-
+const { createMessage } = require('../services/messagService');
+const ErrorHandler = require('../utils/ErrorHandlerClass');
 
 // Fetch and view all messages
 const viewAllMessages = asyncWrapper(async (req, res, next) => {
@@ -95,10 +96,34 @@ const viewConversation = asyncWrapper(async (req, res, next) => {
 });
 
 
+// Sending a message
+const sendMessage = asyncWrapper(async (req, res, next) => {
+    const { partnerId } = req.params;
+    const senderId = req.user._id;
+    const { content } = req.body;
+    console.log("REc", partnerId);
+    if (!partnerId || !content) {
+        return next(new ErrorHandler("Receiver and content are required!", 400))
+    }
+
+    // Calling createMessage service to pass data
+    const message = await createMessage({
+        partnerId,
+        senderId,
+        content
+    })
+
+    return res.status(201).json({
+        success: true,
+        message
+    });
+});
+
 
 module.exports = {
     viewAllMessages,
-    viewConversation
+    viewConversation,
+    sendMessage
 }
 
 
