@@ -1,10 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { viewAllMessages } = require('../controllers/messageController');
+const { viewAllMessages, viewConversation } = require('../controllers/messageController');
 const auth = require('../middleware/auth');
 
 
+// View all messages
 router.get('/messages', auth, viewAllMessages);
+
+// View single conversation of any partner/person
+router.get('/conversation/:partnerId', auth, viewConversation);
 
 
 module.exports = router;

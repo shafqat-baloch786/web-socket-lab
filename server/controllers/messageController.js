@@ -72,8 +72,33 @@ const viewAllMessages = asyncWrapper(async (req, res, next) => {
 });
 
 
+
+// Get single conversation history/all messages
+const viewConversation = asyncWrapper(async (req, res, next) => {
+    const { partnerId } = req.params;
+    const userId = req.user._id;
+    const conversation = await Messages.find({
+        $or: [
+            {
+                sender: userId, receiver: partnerId
+            },
+            {
+                receiver: userId, sender: partnerId
+            }
+        ]
+    }).sort({ createdAt: -1 }).limit(50);
+
+    return res.status(200).json({
+        success: true,
+        conversation,
+    });
+});
+
+
+
 module.exports = {
     viewAllMessages,
+    viewConversation
 }
 
 
