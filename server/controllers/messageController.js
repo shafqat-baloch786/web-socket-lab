@@ -101,7 +101,6 @@ const sendMessage = asyncWrapper(async (req, res, next) => {
     const { partnerId } = req.params;
     const senderId = req.user._id;
     const { content } = req.body;
-    console.log("REc", partnerId);
     if (!partnerId || !content) {
         return next(new ErrorHandler("Receiver and content are required!", 400))
     }
