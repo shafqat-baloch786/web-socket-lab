@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   # Backend API service
   api:
@@ -5,12 +7,24 @@ services:
     container_name: socket-api
     ports:
       - "4000:4000"
-    # Sync host files with container for hot-reloading
     volumes:
       - ./server:/usr/src/app
-      # Prevents host node_modules from overwriting container node_modules
       - /usr/src/app/node_modules
     env_file:
       - ./server/.env
     environment:
       - NODE_ENV=development
+    command: npm run dev   # nodemon
+
+  # Frontend service (Vite)
+  frontend:
+    build: ./client
+    container_name: socket-frontend
+    ports:
+      - "5173:5173"      # Vite default dev server port
+    volumes:
+      - ./client:/usr/src/app
+      - /usr/src/app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
