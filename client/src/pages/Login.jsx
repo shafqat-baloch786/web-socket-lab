@@ -1,29 +1,33 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 import { Input } from '../components/Input';
 
 const Login = () => {
+    useEffect(() => {
+        document.title = "Login | Web Socket Lab";
+    }, []);
+
     const [formData, setFormData] = useState({ email: '', password: '' });
-    const [isLoading, setIsLoading] = useState(false); // Added loading state
+    const [isLoading, setIsLoading] = useState(false);
     const { setToken, setUser } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setIsLoading(true); // Start loading
+        setIsLoading(true);
         
         try {
             const data = await loginUser(formData);
             setToken(data.token);
             setUser(data.user);
-            navigate('/dashboard');
+            // Updated: Redirecting to profile instead of dashboard
+            navigate('/profile');
         } catch (err) {
-            // Your backend ErrorHandler returns a message in err.response.data
             alert(err.response?.data?.message || "Invalid credentials. Please try again.");
         } finally {
-            setIsLoading(false); // Stop loading regardless of outcome
+            setIsLoading(false);
         }
     };
 

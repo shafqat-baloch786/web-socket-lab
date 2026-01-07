@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { registerUser } from '../services/authService';
+import { useAuth } from '../context/AuthContext'; // Added to handle auto-login
 import { Input } from '../components/Input';
 
 const Register = () => {
+    // Set Document Title
+    useEffect(() => {
+        document.title = "Register | Web Socket Lab";
+    }, []);
+
     const [formData, setFormData] = useState({ name: '', email: '', password: '' });
     const [isLoading, setIsLoading] = useState(false);
+    
+    // Hooks for context and navigation
+    const { setToken, setUser } = useAuth();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -13,9 +22,15 @@ const Register = () => {
         setIsLoading(true);
 
         try {
-            await registerUser(formData);
-            // Optional: You could show a success toast here
-            navigate('/login');
+            // Your backend 'register' controller returns { token, user, success, message }
+            const data = await registerUser(formData);
+            
+            // Save data to global state (auto-login)
+            setToken(data.token);
+            setUser(data.user);
+
+            // Directly navigate to profile
+            navigate('/profile');
         } catch (err) {
             alert(err.response?.data?.message || "Registration failed. Please try again.");
         } finally {
