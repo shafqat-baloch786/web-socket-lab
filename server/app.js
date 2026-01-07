@@ -6,7 +6,7 @@ const errorMiddleware = require('./middleware/errorMiddleware');
 const authRoute = require('./routes/authRoute');
 const mainRoute = require('./routes/mainRoute');
 const messagesRoute = require('./routes/messageRoute');
-
+const userRoute = require('./routes/userRoute');
 
 
 // Cors for Cross Origin Sharing
@@ -27,6 +27,9 @@ app.use('/api/main', mainRoute);
 
 // Messages routes
 app.use('/api', messagesRoute);
+
+// Users route
+app.use('/api/users', userRoute);
 
 
 
