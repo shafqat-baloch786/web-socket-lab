@@ -124,11 +124,14 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
 
     return (
         <div className="flex flex-col h-full bg-white animate-in fade-in duration-300">
+            {/* --- HEADER START --- */}
             <header className="h-20 flex items-center justify-between px-8 border-b border-gray-100 bg-white sticky top-0 z-10">
                 <div className="flex items-center space-x-4 flex-1">
+                    {/* Back Arrow (Mobile Only) */}
                     <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl md:hidden">
                         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                     </button>
+                    
                     {!showSearch ? (
                         <>
                             <div className="h-11 w-11 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black uppercase shadow-lg shadow-indigo-100">
@@ -160,10 +163,33 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
                         </div>
                     )}
                 </div>
-                <button onClick={() => { setShowSearch(!showSearch); setChatSearchTerm(''); }} className="ml-4 p-2.5 rounded-xl transition-all text-gray-400 hover:text-indigo-600 hover:bg-gray-50">
-                    {showSearch ? <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg> : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>}
-                </button>
+
+                <div className="flex items-center space-x-2 ml-4">
+                    {/* Search Toggle Button */}
+                    <button 
+                        onClick={() => { setShowSearch(!showSearch); setChatSearchTerm(''); }} 
+                        className={`p-2.5 rounded-xl transition-all ${showSearch ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:text-indigo-600 hover:bg-gray-50'}`}
+                    >
+                        {showSearch ? (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        ) : (
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        )}
+                    </button>
+
+                    {/* Go to Lab Directory (Home) Button */}
+                    <button 
+                        onClick={onBack} 
+                        className="p-2.5 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-gray-50 transition-all"
+                        title="Back to Directory"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                        </svg>
+                    </button>
+                </div>
             </header>
+            {/* --- HEADER END --- */}
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F8FAFC]">
                 {messages.map((msg, i) => {
