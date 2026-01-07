@@ -1,19 +1,10 @@
-const server = require('../server');
+const chatSocket = require('./chatHandler');
 
-
-// Initialize socket
 const socketInit = (io) => {
     return (socket) => {
-        console.log("New socket is connected at socket ID: ", socket.id);
-
-
-    // Print out disconnection information
-    io.on('disconnect', () => {
-        console.log("Socket disconnected!");
-    })
-    }
-
-}
-
+        // Pass control to the specialized chat handler
+        chatSocket(io, socket);
+    };
+};
 
 module.exports = socketInit;

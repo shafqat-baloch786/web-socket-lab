@@ -110,7 +110,14 @@ const sendMessage = asyncWrapper(async (req, res, next) => {
         partnerId,
         senderId,
         content
-    })
+    });
+
+    // 2. Real-Time Push
+    const io = req.app.get('socketio');
+    if (io) {
+        // We emit to the room named after the partner's ID
+        io.to(partnerId.toString()).emit('newMessage', message);
+    }
 
     return res.status(201).json({
         success: true,
