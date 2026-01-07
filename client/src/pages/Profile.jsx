@@ -6,7 +6,7 @@ import ChatWindow from '../components/ChatWindow';
 import axios from 'axios';
 
 const Profile = () => {
-    const { partnerId } = useParams(); // Grabs the ID from the URL: /conversation/:partnerId
+    const { partnerId } = useParams();
     const navigate = useNavigate();
     const { token, logout, user: profile } = useAuth();
     const socket = useSocket();
@@ -16,7 +16,6 @@ const Profile = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
 
-    // 1. Fetch Users & Conversations
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -37,7 +36,6 @@ const Profile = () => {
         if (token && profile) fetchData();
     }, [token, profile, logout]);
 
-    // 2. Real-time Listeners
     useEffect(() => {
         if (!socket || !profile?._id) return;
 
@@ -46,8 +44,6 @@ const Profile = () => {
         });
 
         socket.on('newMessage', (msg) => {
-            console.log("Real-time message received:", msg);
-            
             const myId = String(profile._id);
             const partnerOfMsg = String(msg.sender) === myId ? msg.receiver : msg.sender;
 
@@ -71,10 +67,8 @@ const Profile = () => {
         };
     }, [socket, profile?._id, users]);
 
-    // Derived State: Who is the selected partner based on the URL?
     const selectedUser = users.find(u => String(u._id) === String(partnerId));
 
-    // UI Helper Logic
     const formatLastSeen = (date) => {
         if (!date) return 'Long ago';
         const now = new Date();
@@ -99,7 +93,6 @@ const Profile = () => {
 
     return (
         <div className="flex h-screen bg-[#F8FAFC] overflow-hidden font-sans">
-            {/* Sidebar */}
             <aside className="w-80 bg-white border-r border-gray-100 flex flex-col hidden md:flex">
                 <div className="p-8">
                     <h1 className="text-2xl font-black text-indigo-600 tracking-tighter italic">WS LAB</h1>
@@ -151,11 +144,10 @@ const Profile = () => {
                 </div>
             </aside>
 
-            {/* Main Content */}
             <main className="flex-1 relative overflow-hidden">
                 {partnerId ? (
                     <ChatWindow 
-                        partnerId={partnerId}
+                        key={partnerId} 
                         partner={selectedUser} 
                         onBack={() => navigate('/profile')} 
                     />
