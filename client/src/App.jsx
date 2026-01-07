@@ -1,17 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext'; // Ensure SocketProvider is here
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 
-/**
- * Frontend Protected Route Wrapper
- * Even though your backend is secured, this prevents 
- * unauthenticated users from seeing the Profile UI.
- */
 const ProtectedRoute = ({ children }) => {
-    const { token } = useAuth();
+    const { token, loading } = useAuth();
+    if (loading) return null; // Wait for auth check
     if (!token) {
         return <Navigate to="/login" replace />;
     }
@@ -21,30 +18,40 @@ const ProtectedRoute = ({ children }) => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+      <SocketProvider> {/* Wrap inside Auth so socket has access to user */}
+        <Router>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
 
-          {/* Protected Frontend Route */}
-          <Route 
-            path="/profile" 
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } 
-          />
+            {/* General Directory View */}
+            <Route 
+              path="/profile" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
 
-          {/* Root Redirect */}
-          <Route path="/" element={<Navigate to="/login" />} />
-          
-          {/* 404 Catch-all */}
-          <Route path="*" element={<Navigate to="/login" />} />
-        </Routes>
-      </Router>
+            {/* Specific Conversation View */}
+            <Route 
+              path="/conversation/:partnerId" 
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Root Redirect */}
+            <Route path="/" element={<Navigate to="/login" />} />
+            <Route path="*" element={<Navigate to="/login" />} />
+          </Routes>
+        </Router>
+      </SocketProvider>
     </AuthProvider>
   );
 }
