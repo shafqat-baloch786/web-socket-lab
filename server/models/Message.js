@@ -22,6 +22,10 @@ const messageSchema = new mongoose.Schema(
             enum: ['text', 'image', 'file'],
             default: 'text'
         },
+        deletedFor: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }],
         isRead: {
             type: Boolean,
             default: false

@@ -1,6 +1,6 @@
 const asyncWrapper = require('../utils/asyncWrapper');
 const Messages = require('../models/Message');
-const { createMessage } = require('../services/messagService');
+const { createMessage } = require('../services/messageService');
 const ErrorHandler = require('../utils/ErrorHandlerClass');
 
 // Fetch and view all messages
@@ -19,9 +19,13 @@ const viewAllMessages = asyncWrapper(async (req, res, next) => {
                     {
                         receiver: userId
                     }
-                ]
+                ],
+
+                // Exclude Deleted messages for specific user
+                deletedFor: { $ne: userId }
             }
         },
+
 
         // Stage 2, sorting on base of createdAt timestamp, show latest first/on top
         {
@@ -86,7 +90,8 @@ const viewConversation = asyncWrapper(async (req, res, next) => {
             {
                 receiver: userId, sender: partnerId
             }
-        ]
+        ],
+        deletedFor: { $ne: userId }
     }).sort({ createdAt: -1 }).limit(50);
 
     return res.status(200).json({
@@ -125,12 +130,42 @@ const sendMessage = asyncWrapper(async (req, res, next) => {
     });
 });
 
+// Delete conversation for one user
+const deleteConversation = asyncWrapper(async (req, res, next) => {
+    const { partnerId } = req.params;
+    const userId = req.user._id;
+
+    await Messages.updateMany(
+        {
+            $or: [
+                { sender: userId, receiver: partnerId },
+                { sender: partnerId, receiver: userId }
+            ]
+        },
+        {
+            $addToSet: { deletedFor: userId } // $addToSet prevents duplicates
+        }
+    );
+
+    // * Deletes garbage messages deleted for both users (OPTIONAL)
+    await Messages.deleteMany({
+        $or: [
+            { sender: userId, receiver: partnerId },
+            { sender: partnerId, receiver: userId }
+        ],
+        deletedFor: { $all: [userId, partnerId] }
+    });
+
+    return res.status(200).json({
+        success: true,
+        message: "Conversation deleted successfully"
+    });
+});
+
 
 module.exports = {
     viewAllMessages,
     viewConversation,
-    sendMessage
+    sendMessage,
+    deleteConversation,
 }
-
-
-
