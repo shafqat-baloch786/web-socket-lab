@@ -5,19 +5,19 @@ import { useSocket } from '../context/SocketContext';
 import { useParams } from 'react-router-dom';
 
 const ChatWindow = ({ partner, onBack, onMessageSent }) => {
-    const { partnerId } = useParams(); 
-    const { token, user } = useAuth(); 
+    const { partnerId } = useParams();
+    const { token, user } = useAuth();
     const socket = useSocket();
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState('');
-    
+
     // Search & Navigation States
     const [showSearch, setShowSearch] = useState(false);
     const [chatSearchTerm, setChatSearchTerm] = useState('');
-    const [activeIndex, setActiveIndex] = useState(0); 
-    
+    const [activeIndex, setActiveIndex] = useState(0);
+
     const scrollRef = useRef();
-    const matchRefs = useRef([]); 
+    const matchRefs = useRef([]);
 
     // 1. Fetch History
     useEffect(() => {
@@ -49,7 +49,7 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
     }, [socket, partnerId]);
 
     // 3. Search Logic
-    const matches = messages.filter(m => 
+    const matches = messages.filter(m =>
         chatSearchTerm && m.content.toLowerCase().includes(chatSearchTerm.toLowerCase())
     );
 
@@ -88,7 +88,7 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
         const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
         return (
             <span>
-                {parts.map((part, i) => 
+                {parts.map((part, i) =>
                     part.toLowerCase() === highlight.toLowerCase() ? (
                         <mark key={i} className={`${isCurrentMatch ? 'bg-orange-400' : 'bg-yellow-300'} text-black rounded-sm px-0.5 transition-colors`}>
                             {part}
@@ -105,13 +105,33 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
         const text = newMessage;
         setNewMessage('');
         try {
-            const res = await axios.post(`http://localhost:4000/api/conversation/${partnerId}`, 
+            const res = await axios.post(`http://localhost:4000/api/conversation/${partnerId}`,
                 { content: text },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
             setMessages(prev => [...prev, res.data.message]);
             if (onMessageSent) onMessageSent(res.data.message);
         } catch (err) { console.error("Send failed", err); }
+    };
+
+    // ... inside ChatWindow component ...
+
+    const handleDeleteConversation = async () => {
+        if (!window.confirm("Delete this conversation? It will disappear for you only.")) return;
+
+        try {
+            await axios.delete(`http://localhost:4000/api/conversation/${partnerId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            setMessages([]);
+
+            if (onBack) onBack();
+
+        } catch (err) {
+            console.error("Delete failed", err);
+            alert("Failed to delete conversation");
+        }
     };
 
     useEffect(() => {
@@ -131,7 +151,7 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
                     <button onClick={onBack} className="p-2 hover:bg-gray-100 rounded-xl md:hidden">
                         <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>
                     </button>
-                    
+
                     {!showSearch ? (
                         <>
                             <div className="h-11 w-11 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black uppercase shadow-lg shadow-indigo-100">
@@ -166,8 +186,8 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
 
                 <div className="flex items-center space-x-2 ml-4">
                     {/* Search Toggle Button */}
-                    <button 
-                        onClick={() => { setShowSearch(!showSearch); setChatSearchTerm(''); }} 
+                    <button
+                        onClick={() => { setShowSearch(!showSearch); setChatSearchTerm(''); }}
                         className={`p-2.5 rounded-xl transition-all ${showSearch ? 'bg-indigo-50 text-indigo-600' : 'text-gray-400 hover:text-indigo-600 hover:bg-gray-50'}`}
                     >
                         {showSearch ? (
@@ -177,9 +197,20 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
                         )}
                     </button>
 
+                    {/* Delete button */}
+                    <button
+                        onClick={handleDeleteConversation}
+                        className="p-2.5 rounded-xl text-gray-400 hover:text-red-500 hover:bg-red-50 transition-all"
+                        title="Delete Conversation"
+                    >
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                    </button>
+
                     {/* Go to Lab Directory (Home) Button */}
-                    <button 
-                        onClick={onBack} 
+                    <button
+                        onClick={onBack}
                         className="p-2.5 rounded-xl text-gray-400 hover:text-indigo-600 hover:bg-gray-50 transition-all"
                         title="Back to Directory"
                     >
@@ -200,9 +231,8 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
 
                     return (
                         <div key={msg._id || i} ref={el => { if (isMatched) matchRefs.current[matchIdx] = el; }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                            <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm font-medium shadow-sm border transition-all ${
-                                isMe ? 'bg-indigo-600 border-indigo-700 text-white rounded-tr-none' : 'bg-white border-gray-200 text-gray-800 rounded-tl-none'
-                            } ${isCurrent ? 'ring-4 ring-orange-400 border-orange-400' : isMatched ? 'ring-4 ring-yellow-400/30 border-yellow-400' : ''}`}>
+                            <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm font-medium shadow-sm border transition-all ${isMe ? 'bg-indigo-600 border-indigo-700 text-white rounded-tr-none' : 'bg-white border-gray-200 text-gray-800 rounded-tl-none'
+                                } ${isCurrent ? 'ring-4 ring-orange-400 border-orange-400' : isMatched ? 'ring-4 ring-yellow-400/30 border-yellow-400' : ''}`}>
                                 {highlightText(msg.content, chatSearchTerm, isCurrent)}
                             </div>
                         </div>
