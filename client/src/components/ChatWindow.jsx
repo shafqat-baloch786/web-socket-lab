@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useOptimistic } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -9,7 +9,6 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
     const { token, user } = useAuth();
     const socket = useSocket();
     const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
 
     // Search & Navigation States
     const [showSearch, setShowSearch] = useState(false);
@@ -18,6 +17,22 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
 
     const scrollRef = useRef();
     const matchRefs = useRef([]);
+    const inputRef = useRef(null);
+
+    // Optimistic State
+    const [optimisticMessages, setOptimisticMessages] = useOptimistic(messages, (prevMessages, newMessage) => {
+        // Check if the server has already added this specific message to the real state
+        const isAlreadyInRealState = prevMessages.some(
+            realMsg => realMsg.tmpId === newMessage.tmpId
+        );
+
+        // If the server already sent it back, don't add the optimistic version!
+        if (isAlreadyInRealState) {
+            return prevMessages;
+        }
+
+        return [...prevMessages, newMessage];
+    })
 
     // 1. Fetch History
     useEffect(() => {
@@ -99,19 +114,35 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
         );
     };
 
-    const handleSendMessage = async (e) => {
-        e.preventDefault();
-        if (!newMessage.trim()) return;
-        const text = newMessage;
-        setNewMessage('');
+    const handleSendMessage = async (formData) => {
+        const text = formData.get('text');
+        
+        if (!text.trim()) return;
+        inputRef.current.value = '';
+        
+        const tmpId = crypto.randomUUID();
+
+        setOptimisticMessages({ content: text, isSending: true, sender: user?._id || user?.id, receiver: partnerId, tmpId })
+
         try {
             const res = await axios.post(`http://localhost:4000/api/conversation/${partnerId}`,
                 { content: text },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            setMessages(prev => [...prev, res.data.message]);
+            
+            setMessages(prev => [...prev, {...res.data.message, tmpId}])
+
             if (onMessageSent) onMessageSent(res.data.message);
-        } catch (err) { console.error("Send failed", err); }
+
+        } catch (err) {
+            // restore input 
+            console.error("Send failed", err);
+            
+            requestAnimationFrame(() => {
+                inputRef.current.value = text;
+            });
+        }
+
     };
 
     // ... inside ChatWindow component ...
@@ -138,7 +169,7 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
         if (!chatSearchTerm) {
             scrollRef.current?.scrollIntoView({ behavior: "smooth" });
         }
-    }, [messages, chatSearchTerm]);
+    }, [optimisticMessages, chatSearchTerm]);
 
     if (!partner) return <div className="flex-1 bg-[#F8FAFC]" />;
 
@@ -223,16 +254,17 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
             {/* --- HEADER END --- */}
 
             <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#F8FAFC]">
-                {messages.map((msg, i) => {
+                {optimisticMessages.map((msg, i) => {
                     const isMe = String(msg.sender?._id || msg.sender) === String(user?._id || user?.id);
                     const matchIdx = matches.findIndex(m => m._id === msg._id);
                     const isMatched = matchIdx !== -1;
                     const isCurrent = isMatched && (matchIdx + 1 === activeIndex);
+                    const isSending = msg.isSending || false;
 
                     return (
-                        <div key={msg._id || i} ref={el => { if (isMatched) matchRefs.current[matchIdx] = el; }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                        <div key={msg._id || msg.tmpId || i} ref={el => { if (isMatched) matchRefs.current[matchIdx] = el; }} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm font-medium shadow-sm border transition-all ${isMe ? 'bg-indigo-600 border-indigo-700 text-white rounded-tr-none' : 'bg-white border-gray-200 text-gray-800 rounded-tl-none'
-                                } ${isCurrent ? 'ring-4 ring-orange-400 border-orange-400' : isMatched ? 'ring-4 ring-yellow-400/30 border-yellow-400' : ''}`}>
+                                } ${isCurrent ? 'ring-4 ring-orange-400 border-orange-400' : isMatched ? 'ring-4 ring-yellow-400/30 border-yellow-400' : ''} ${isSending ? 'opacity-60 italic' : ''}`}>
                                 {highlightText(msg.content, chatSearchTerm, isCurrent)}
                             </div>
                         </div>
@@ -242,8 +274,8 @@ const ChatWindow = ({ partner, onBack, onMessageSent }) => {
             </div>
 
             <footer className="p-6 bg-white border-t border-gray-100">
-                <form onSubmit={handleSendMessage} className="relative flex items-center">
-                    <input type="text" value={newMessage} onChange={(e) => setNewMessage(e.target.value)} placeholder="Type a message..."
+                <form action={handleSendMessage} className="relative flex items-center">
+                    <input ref={inputRef} type="text" name="text" placeholder="Type a message..."
                         className="w-full bg-gray-50 border-2 border-gray-100 focus:border-indigo-600 focus:bg-white rounded-2xl py-3.5 pl-6 pr-16 text-sm font-bold text-gray-900 outline-none transition-all placeholder:text-gray-400"
                     />
                     <button type="submit" className="absolute right-2 p-2.5 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 shadow-md active:scale-95 transition-all">
